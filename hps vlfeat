@@ -7,10 +7,8 @@ using namespace cv;
 
 
 int main(int argc, const char * argv[]) {
-	// 读入一张图片（游戏原画）   
+	 
 	Mat img = imread("D:\\0_3.jpg");
-	// 创建一个名为 "游戏原画"窗口 
-	// 下面3句用于测试opencv
 	waitKey();
 
 	// 下面用于测试vlfeat

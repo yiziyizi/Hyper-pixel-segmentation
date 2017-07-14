@@ -1,0 +1,114 @@
+#include <opencv2/opencv.hpp>
+#include<opencv2\highgui.hpp>
+#include<opencv2\imgproc.hpp>
+#include<iostream>
+#include<stdio.h>
+#include<stdlib.h>
+#include<opencv2\features2d.hpp>
+#include<vector>
+extern "C" {
+#include<vl\generic.h>
+#include<vl\slic.h>
+#include<vl\sift.h>
+#include<vl\dsift.h>
+}
+using namespace cv;
+using namespace std;
+
+
+int main() 
+{
+	Mat img_1 = imread("D:\\0_3.jpg",0);
+	//cvtColor(img, img, CV_RGB2BGR);
+	vl_sift_pix *imgdata_1 = new vl_sift_pix[img_1.cols*img_1.rows];
+	for (int i = 0; i < img_1.rows; i++)
+	{
+		uchar *P = img_1.ptr<uchar>(i);
+		for (int j = 0; j < img_1.cols; j++)
+		{
+			imgdata_1[i*img_1.cols + j] = P[j];
+		}
+	}
+
+	VlSiftFilt *siftfilt_1 = NULL;
+	siftfilt_1 = vl_sift_new(img_1.cols, img_1.rows, 4, 2, 0);
+	
+	
+	vector<VlSiftKeypoint> keypoints1, keypoints2;
+	Mat descriptors_1, descriptors_2;
+	if (vl_sift_process_first_octave(siftfilt_1, imgdata_1) != VL_ERR_EOF)
+	{
+		while (true)
+		{
+			vl_sift_detect(siftfilt_1);
+			VlSiftKeypoint *pkeypoint_1 = siftfilt_1->keys;
+			for (int i = 0; i < siftfilt_1->nkeys; i++)
+			{
+				VlSiftKeypoint temkeypoint_1 = *pkeypoint_1;
+				circle(img_1, cvPoint(temkeypoint_1.x, temkeypoint_1.y), temkeypoint_1.sigma / 2, CV_RGB(255, 255, 0));
+				double angles_1[4];
+				int anglecount = vl_sift_calc_keypoint_orientations(siftfilt_1, angles_1, &temkeypoint_1);
+				for (int j = 0; j < anglecount; j++)
+				{
+					double temangle_1 = angles_1[j];
+					vl_sift_calc_keypoint_descriptor(siftfilt_1, imgdata_1, &temkeypoint_1, temangle_1);
+			    }
+				keypoints1.push_back(temkeypoint_1);
+				pkeypoint_1++;
+			}
+			if (vl_sift_process_next_octave(siftfilt_1) == VL_ERR_EOF)
+				break;
+		}
+	}
+
+	Mat img_2 = imread("D:\\0_3.jpg", 0);
+	vl_sift_pix *imgdata_2 = new vl_sift_pix[img_2.cols*img_2.rows];
+	for (int i = 0; i < img_2.rows; i++)
+	{
+		uchar *P = img_2.ptr<uchar>(i);
+		for (int j = 0; j < img_2.cols; j++)
+		{
+			imgdata_2[i*img_2.cols + j] = P[j];
+		}
+	}
+
+	VlSiftFilt *siftfilt_2 = NULL;
+	siftfilt_2 = vl_sift_new(img_2.cols, img_2.rows, 4, 2, 0);
+	if (vl_sift_process_first_octave(siftfilt_2, imgdata_2) != VL_ERR_EOF)
+	{
+		while (true)
+		{
+			vl_sift_detect(siftfilt_2);
+			VlSiftKeypoint *pkeypoint_2 = siftfilt_2->keys;
+			for (int i = 0; i < siftfilt_2->nkeys; i++)
+			{
+				VlSiftKeypoint temkeypoint_2 = *pkeypoint_2;
+				circle(img_2, cvPoint(temkeypoint_2.x, temkeypoint_2.y), temkeypoint_2.sigma / 2, CV_RGB(255, 255, 0));
+				double angles_2[4];
+				int anglecount_2 = vl_sift_calc_keypoint_orientations(siftfilt_2, angles_2, &temkeypoint_2);
+				for (int j = 0; j < anglecount_2; j++)
+				{
+					double temangle_2 = angles_2[j];
+					vl_sift_calc_keypoint_descriptor(siftfilt_2, imgdata_2, &temkeypoint_2, temangle_2);
+				}
+				keypoints2.push_back(temkeypoint_2);
+				pkeypoint_2++;
+			}
+			if (vl_sift_process_next_octave(siftfilt_2) == VL_ERR_EOF)
+				break;
+		}
+	}
+	for (int i = 0; i < keypoints1.size(); i++)
+	{
+		cout << keypoints1[i].s << " " << keypoints1[i].o <<" "<<keypoints1[i].sigma<< endl;
+	}
+
+	vl_sift_delete(siftfilt_1);
+	vl_sift_delete(siftfilt_2);
+	delete[]imgdata_1;
+	delete[]imgdata_2;
+	imshow("img_1", img_1);
+	imshow("img_2", img_2);
+	waitKey();
+	system("pause");
+}
